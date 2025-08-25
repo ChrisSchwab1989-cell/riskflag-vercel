@@ -1,50 +1,318 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>RiskFlag Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RiskFlag – Dashboard</title>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    .card { padding: 15px; margin: 10px; border: 1px solid #ccc; border-radius: 8px; }
-    button { padding: 5px 10px; margin: 5px; cursor: pointer; }
+    :root {
+      --bg: #0b0f14;
+      --card: #101820;
+      --muted: #9bb0c3;
+      --text: #eaf1f8;
+      --border: #1e2b36;
+      --green: #2ecc71;
+      --yellow: #f1c40f;
+      --red: #e74c3c;
+      --blue: #2997ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 28px;
+      background: radial-gradient(1200px 800px at 10% -10%, #13202b 0, #0b0f14 55%) no-repeat;
+      color: var(--text); font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+    }
+    h1 { font-size: 18px; margin: 0 0 18px; display: flex; gap: 10px; align-items: center; }
+    h1::before { content: "📊"; }
+
+    .grid {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(12, minmax(0,1fr));
+    }
+    .card {
+      background: linear-gradient(180deg, #0f151c 0%, #0d131a 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.35);
+      padding: 16px;
+    }
+    .span-4  { grid-column: span 4; }
+    .span-8  { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .title  { font-weight:600; letter-spacing:.2px; }
+    .subtle { color: var(--muted); font-size:12px; }
+
+    button {
+      appearance: none; border: 1px solid var(--border);
+      background: #0f151c; color: var(--text);
+      padding: 8px 12px; border-radius: 10px; cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { border-color: #284155; }
+
+    /* Risk chips */
+    .chips { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:10px; }
+    .chip {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 12px; border:1px solid var(--border); border-radius:12px;
+      background:#0f151c;
+    }
+    .chip .name { color: var(--muted); }
+    .chip .value { font-weight:700; }
+    .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:8px; }
+
+    /* Tables */
+    table { width:100%; border-collapse: collapse; }
+    thead th {
+      text-align:left; padding:10px 8px; color: var(--muted); font-size:12px; border-bottom:1px solid var(--border);
+    }
+    tbody td { padding:10px 8px; border-bottom:1px solid var(--border); }
+    tbody tr:hover { background:#0e141b; }
+
+    .pos { color: var(--green); font-weight:700; }
+    .neg { color: var(--red); font-weight:700; }
+    .neutral { color: var(--yellow); font-weight:700; }
+    .badge {
+      font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); background:#0f151c;
+    }
+    .badge.green  { border-color: rgba(46,204,113,.4); background:rgba(46,204,113,.08); color:var(--green); }
+    .badge.yellow { border-color: rgba(241,196,15,.4); background:rgba(241,196,15,.08); color:var(--yellow); }
+    .badge.red    { border-color: rgba(231,76,60,.4);  background:rgba(231,76,60,.08);  color:var(--red); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .small { font-size:12px; color:var(--muted); }
   </style>
 </head>
 <body>
-  <h1>📊 RiskFlag – Dashboard</h1>
+  <h1>RiskFlag – Dashboard</h1>
 
-  <div class="card">
-    <h2>Risk-Indikatoren</h2>
-    <button onclick="loadRiskFlag()">Aktualisieren</button>
-    <pre id="risk">Noch nichts geladen…</pre>
-  </div>
+  <div class="grid">
+    <!-- Risk-Indicatoren -->
+    <div class="card span-4">
+      <div class="header">
+        <div class="title">Risk-Indikatoren</div>
+        <button id="btnRisk">Aktualisieren</button>
+      </div>
+      <div id="riskChips" class="chips small">Lade…</div>
+      <div class="small" id="riskTs"></div>
+    </div>
 
-  <div class="card">
-    <h2>Investitions-Barometer</h2>
-    <input id="ticker" value="AAPL, SAP.DE, Siemens" style="width:70%">
-    <button onclick="loadBarometer()">Analysieren</button>
-    <pre id="baro">Noch nichts geladen…</pre>
-  </div>
+    <!-- Investitions-Barometer -->
+    <div class="card span-8">
+      <div class="header">
+        <div class="title">Investitions-Barometer</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="tickers" class="mono" value="AAPL, SAP.DE, Siemens, 846900, DE0007164608"
+                 style="width:460px; padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:#0f151c; color:var(--text);" />
+          <button id="btnBaro">Analysieren</button>
+        </div>
+      </div>
+      <div style="overflow:auto;">
+        <table id="baroTable">
+          <thead>
+            <tr>
+              <th style="width:22%">Ticker</th>
+              <th>Ist-Preis</th>
+              <th>Ø-Kursziel</th>
+              <th>Abw. %</th>
+              <th>Analysten</th>
+              <th>Empfehlung</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6" class="small">Noch keine Daten.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
 
-  <div class="card">
-    <h2>Top30 Krypto</h2>
-    <button onclick="loadTop30()">Laden</button>
-    <pre id="top30">Noch nichts geladen…</pre>
+    <!-- SMA-200 & Top 30 -->
+    <div class="card span-12">
+      <div class="header">
+        <div class="title">Top-30 Krypto (CoinGecko / Yahoo Fallback)</div>
+        <div>
+          <label class="small">vs </label>
+          <select id="vsSel" style="background:#0f151c; color:var(--text); border:1px solid var(--border); padding:6px 8px; border-radius:10px;">
+            <option value="usd" selected>USD</option>
+            <option value="eur">EUR</option>
+          </select>
+          <button id="btnTop">Laden</button>
+        </div>
+      </div>
+      <div style="overflow:auto;">
+        <table id="topTable">
+          <thead>
+            <tr>
+              <th style="width:28%">Coin</th>
+              <th>Preis</th>
+              <th>24h</th>
+              <th>7d</th>
+              <th>30d</th>
+              <th>1y</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6" class="small">Noch keine Daten.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script>
-    async function loadRiskFlag() {
-      const res = await fetch("/api/riskflag");
-      document.getElementById("risk").textContent = await res.text();
+    const fmt = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
+    const fmt4 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 4 });
+    const pct = (v) => (v===null||v===undefined||Number.isNaN(v)) ? "—" : ((v>0?"+":"") + fmt.format(v) + " %");
+    const money = (v) => (v===null||v===undefined||Number.isNaN(v)) ? "—" : (fmt4.format(v));
+
+    const classify = (value, goodHigh=true) => {
+      // gibt "green" | "yellow" | "red" zurück
+      if (value === null || value === undefined || Number.isNaN(value)) return "yellow";
+      if (goodHigh) {
+        if (value >= 66) return "green";
+        if (value >= 33) return "yellow";
+        return "red";
+      } else {
+        if (value <= 12) return "green";
+        if (value <= 22) return "yellow";
+        return "red";
+      }
+    };
+
+    // ---------- Risk ----------
+    async function loadRisk() {
+      const out = document.getElementById("riskChips");
+      const tsEl = document.getElementById("riskTs");
+      out.textContent = "Lade…";
+      try {
+        const res = await fetch('/api/riskflag');
+        const j = await res.json();
+        if (!j.ok) throw new Error(j.error || "Fehler");
+        const d = j.data || j; // kompatibel zu älteren Strukturen
+
+        const chips = [];
+        const items = [
+          { name:'Fear & Greed (Crypto)', value:d.feargreedCrypto, goodHigh:true },
+          { name:'Fear & Greed (Aktien)', value:d.feargreedStocks, goodHigh:true },
+          { name:'VIX (S&P500)',           value:d.vix,           goodHigh:false },
+          { name:'Funding BTC Perp',       value:d.fundingBTC,    goodHigh:true },
+          { name:'Funding ETH Perp',       value:d.fundingETH,    goodHigh:true },
+          { name:'Stablecoin-Dominanz',    value:d.stablecoinDom, goodHigh:true },
+        ];
+
+        out.innerHTML = "";
+        out.classList.add('chips');
+        for (const it of items) {
+          const cls = classify(it.value, it.goodHigh);
+          const color = cls === 'green' ? 'var(--green)' : cls === 'yellow' ? 'var(--yellow)' : 'var(--red)';
+          const el = document.createElement('div');
+          el.className = 'chip';
+          el.innerHTML = `
+            <span class="name"><span class="dot" style="background:${color}"></span>${it.name}</span>
+            <span class="value ${cls}">${(it.value ?? "—")}</span>
+          `;
+          out.appendChild(el);
+        }
+        tsEl.textContent = j.ts ? "Zeitstempel: " + new Date(j.ts).toLocaleString() : "";
+      } catch (e) {
+        out.textContent = "Fehler: " + e.message;
+      }
     }
+
+    // ---------- Barometer ----------
     async function loadBarometer() {
-      const t = document.getElementById("ticker").value;
-      const res = await fetch("/api/barometer?tickers=" + encodeURIComponent(t));
-      document.getElementById("baro").textContent = await res.text();
+      const tickers = document.getElementById('tickers').value.trim();
+      const url = '/api/barometer?tickers=' + encodeURIComponent(tickers);
+      const body = document.querySelector('#baroTable tbody');
+      body.innerHTML = `<tr><td colspan="6" class="small">Lade…</td></tr>`;
+      try {
+        const res = await fetch(url);
+        const j = await res.json();
+        if (!j.ok) throw new Error(j.error || "Fehler");
+        const rows = j.rows || j.data || [];
+
+        if (!rows.length) {
+          body.innerHTML = `<tr><td colspan="6" class="small">Keine Daten gefunden.</td></tr>`;
+          return;
+        }
+        body.innerHTML = "";
+        for (const r of rows) {
+          const abw = (r.targetAvg && r.price)
+            ? ((r.targetAvg - r.price) / r.price * 100) : null;
+
+          // Empfehlung Badge
+          const rec = (r.recommendation || '').toLowerCase();
+          let recCls = 'yellow';
+          if (rec.includes('buy')) recCls = 'green';
+          if (rec.includes('sell')) recCls = 'red';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="mono">${r.symbol || r.ticker || "—"}</td>
+            <td>${money(r.price)}</td>
+            <td>${money(r.targetAvg)}</td>
+            <td class="${abw==null?'':(abw>=0?'pos':'neg')}">${abw==null?"—":pct(abw)}</td>
+            <td class="small">${r.analysts ?? "—"}</td>
+            <td><span class="badge ${recCls}">${r.recommendation ?? "—"}</span></td>
+          `;
+          body.appendChild(tr);
+        }
+      } catch (e) {
+        body.innerHTML = `<tr><td colspan="6" class="small">Fehler: ${e.message}</td></tr>`;
+      }
     }
-    async function loadTop30() {
-      const res = await fetch("/api/top30");
-      document.getElementById("top30").textContent = await res.text();
+
+    // ---------- Top 30 ----------
+    async function loadTop() {
+      const vs = document.getElementById('vsSel').value;
+      const url = '/api/top30?vs=' + encodeURIComponent(vs);
+      const body = document.querySelector('#topTable tbody');
+      body.innerHTML = `<tr><td colspan="6" class="small">Lade…</td></tr>`;
+      try {
+        const res = await fetch(url);
+        const j = await res.json();
+
+        if (!j.results && j.rows) j.results = j.rows; // kompatibel
+        if (!j.results) throw new Error(j.error || "Keine Ergebnisse");
+
+        const rows = j.results;
+        body.innerHTML = "";
+        for (const r of rows) {
+          const name = r.name || r.symbol || r.ticker || "—";
+          const p24 = r.pct24h ?? r["24h"];
+          const p7  = r.pct7d  ?? r["7d"];
+          const p30 = r.pct30d ?? r["30d"];
+          const p1y = r.pct1y  ?? r["1y"];
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="mono">${name}</td>
+            <td>${money(r.price)}</td>
+            <td class="${p24==null?'':(p24>=0?'pos':'neg')}">${pct(p24)}</td>
+            <td class="${p7==null?'':(p7>=0?'pos':'neg')}">${pct(p7)}</td>
+            <td class="${p30==null?'':(p30>=0?'pos':'neg')}">${pct(p30)}</td>
+            <td class="${p1y==null?'':(p1y>=0?'pos':'neg')}">${pct(p1y)}</td>
+          `;
+          body.appendChild(tr);
+        }
+
+        // timestamp / Hinweis
+        if (j.ts) {
+          const info = document.createElement('tr');
+          info.innerHTML = `<td colspan="6" class="small">Zeitstempel: ${new Date(j.ts).toLocaleString()}${j.warning?` • Hinweis: ${j.warning}`:""}</td>`;
+          body.appendChild(info);
+        }
+      } catch (e) {
+        body.innerHTML = `<tr><td colspan="6" class="small">Fehler: ${e.message}</td></tr>`;
+      }
     }
+
+    // Events
+    document.getElementById('btnRisk').addEventListener('click', loadRisk);
+    document.getElementById('btnBaro').addEventListener('click', loadBarometer);
+    document.getElementById('btnTop').addEventListener('click', loadTop);
+
+    // Auto-Load beim Start
+    loadRisk();
+    loadBarometer();
+    loadTop();
   </script>
 </body>
 </html>
