@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>RiskFlag Dashboard</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .card { padding: 15px; margin: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    button { padding: 5px 10px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>📊 RiskFlag – Dashboard</h1>
+
+  <div class="card">
+    <h2>Risk-Indikatoren</h2>
+    <button onclick="loadRiskFlag()">Aktualisieren</button>
+    <pre id="risk">Noch nichts geladen…</pre>
+  </div>
+
+  <div class="card">
+    <h2>Investitions-Barometer</h2>
+    <input id="ticker" value="AAPL, SAP.DE, Siemens" style="width:70%">
+    <button onclick="loadBarometer()">Analysieren</button>
+    <pre id="baro">Noch nichts geladen…</pre>
+  </div>
+
+  <div class="card">
+    <h2>Top30 Krypto</h2>
+    <button onclick="loadTop30()">Laden</button>
+    <pre id="top30">Noch nichts geladen…</pre>
+  </div>
+
+  <script>
+    async function loadRiskFlag() {
+      const res = await fetch("/api/riskflag");
+      document.getElementById("risk").textContent = await res.text();
+    }
+    async function loadBarometer() {
+      const t = document.getElementById("ticker").value;
+      const res = await fetch("/api/barometer?tickers=" + encodeURIComponent(t));
+      document.getElementById("baro").textContent = await res.text();
+    }
+    async function loadTop30() {
+      const res = await fetch("/api/top30");
+      document.getElementById("top30").textContent = await res.text();
+    }
+  </script>
+</body>
+</html>
