@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>RiskFlag Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f6fa; margin: 20px; }
+    .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    button { padding: 10px 20px; border: none; border-radius: 8px; background: #0070f3; color: white; cursor: pointer; }
+    input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    pre { white-space: pre-wrap; background:#f4f4f4; padding:10px; border-radius:8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>📊 RiskFlag – Dashboard</h1>
+
+  <div class="card">
+    <h2>Risk-Indikatoren</h2>
+    <button onclick="loadRiskflag()">Aktualisieren</button>
+    <pre id="risk">Noch nichts geladen…</pre>
+  </div>
+
+  <div class="card">
+    <h2>Investitions-Barometer</h2>
+    <input id="ticker" placeholder="AAPL, SAP.DE, Siemens, DE0007164608" style="width:70%">
+    <button onclick="loadBarometer()">Analysieren</button>
+    <pre id="baro">Noch nichts geladen…</pre>
+  </div>
+
+  <div class="card">
+    <h2>Top 30 Krypto</h2>
+    <button onclick="loadTop30()">Laden</button>
+    <pre id="top30">Noch nichts geladen…</pre>
+  </div>
+
+<script>
+async function loadRiskflag() {
+  const res = await fetch("/api/riskflag");
+  document.getElementById("risk").textContent = await res.text();
+}
+async function loadBarometer() {
+  const tickers = document.getElementById("ticker").value;
+  const res = await fetch("/api/barometer?tickers=" + encodeURIComponent(tickers));
+  document.getElementById("baro").textContent = await res.text();
+}
+async function loadTop30() {
+  const res = await fetch("/api/top30");
+  document.getElementById("top30").textContent = await res.text();
+}
+</script>
+</body>
+</html>
